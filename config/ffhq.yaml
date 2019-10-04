@@ -12,5 +12,6 @@ generator_channels: [512, 512, 512, 512, 512, 256, 128, 64, 32, 16]
 discriminator_channels: [512, 512, 512, 512, 512, 256, 128, 64, 32, 16]
 log_iter: 100
 phase_iter: 600000
+weights_halflife_images: 10000
 n_cpu: 12
 opt_level: O0
