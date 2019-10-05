@@ -29,6 +29,9 @@ class EMA():
 
     def __call__(self, name, x):
         assert name in self.shadow
+        print(name)
+        print("Shadow: ", self.shadow[name].device)
+        print("X: ", x.device)
         new_average = (1.0 - self.mu) * x + self.mu * self.shadow[name]
         self.shadow[name] = new_average.clone()
         return new_average
@@ -46,7 +49,8 @@ class Trainer:
         self.dataloader = Dataloader(dataset_dir, batch_size, phase_iter * 2, n_cpu)
 
         self.generator = Generator(generator_channels, nz, style_depth).cuda()
-        self.generator_ema = copy.deepcopy(self.generator).eval()
+        self.generator_ema = Generator(generator_channels, nz, style_depth).cuda()
+        self.generator_ema.load_state_dict(copy.deepcopy(self.generator.state_dict()))
         self.discriminator = Discriminator(discriminator_channels).cuda()
 
         self.tb = tensorboard.tf_recorder('StyleGAN')
