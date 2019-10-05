@@ -80,7 +80,7 @@ class Trainer:
         self.optimizer_g.step()
         for name, param in self.generator.named_parameters():
             if param.requires_grad:
-                param.data = ema(name, param.data)
+                ema(name, param.data)
 
         return loss.item()
 
