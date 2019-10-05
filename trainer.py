@@ -141,7 +141,7 @@ class Trainer:
                 alpha = min(1, n_trained_samples / self.phase_iter) if self.dataloader.img_size > 8 else 1
 
                 loss_d, (real_score, fake_score) = self.discriminator_trainloop(real, alpha)
-                loss_g = self.generator_trainloop(real.size(0), alpha)
+                loss_g = self.generator_trainloop(real.size(0), alpha, ema)
 
                 if global_iter % log_iter == 0:
                     self.log(loss_d, loss_g, real_score, fake_score, test_z, alpha)
