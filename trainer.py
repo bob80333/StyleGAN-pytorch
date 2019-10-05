@@ -41,11 +41,6 @@ class EMA():
             if param.requires_grad:
                 param.data = self.shadow[name]
 
-    def copy_weights(self, ema_model):
-        for name, param in ema_model.named_parameters():
-            if param.requires_grad:
-                self.shadow[name] = param.data.clone()
-
 
 class Trainer:
     def __init__(self, dataset_dir, generator_channels, discriminator_channels, nz, style_depth, lrs, betas, eps,
@@ -177,8 +172,6 @@ class Trainer:
         for name, param in self.generator.named_parameters():
             if param.requires_grad:
                 ema.register(name, param.data)
-
-        ema.copy_weights(self.generator_ema)
 
         return ema
 
