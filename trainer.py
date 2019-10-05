@@ -145,6 +145,7 @@ class Trainer:
                 loss_g = self.generator_trainloop(real.size(0), alpha, ema)
 
                 if global_iter % log_iter == 0:
+                    self.save_ema(ema)
                     self.log(loss_d, loss_g, real_score, fake_score, test_z, alpha)
 
                 # save 3 times during training
