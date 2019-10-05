@@ -46,7 +46,7 @@ class Trainer:
         self.dataloader = Dataloader(dataset_dir, batch_size, phase_iter * 2, n_cpu)
 
         self.generator = Generator(generator_channels, nz, style_depth).cuda()
-        self.generator_ema = copy.deepcopy(self.generator).cpu()
+        self.generator_ema = copy.deepcopy(self.generator).eval()
         self.discriminator = Discriminator(discriminator_channels).cuda()
 
         self.tb = tensorboard.tf_recorder('StyleGAN')
