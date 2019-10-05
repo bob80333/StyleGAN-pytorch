@@ -29,9 +29,6 @@ class EMA():
 
     def __call__(self, name, x):
         assert name in self.shadow
-        print(name)
-        print("Shadow: ", self.shadow[name].device)
-        print("X: ", x.device)
         new_average = (1.0 - self.mu) * x + self.mu * self.shadow[name]
         self.shadow[name] = new_average.clone()
         return new_average
