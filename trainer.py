@@ -137,12 +137,12 @@ class Trainer:
 
         test_z = torch.randn(4, self.nz).cuda()
 
+        self.ema = self.init_ema(self.dataloader.batch_size)
         if checkpoint:
             self.load_checkpoint(checkpoint)
         else:
             self.grow()
 
-        self.ema = self.init_ema(self.dataloader.batch_size)
         while True:
             print('train {}X{} images...'.format(self.dataloader.img_size, self.dataloader.img_size))
 
