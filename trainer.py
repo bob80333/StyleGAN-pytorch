@@ -42,7 +42,7 @@ class EMA():
         self.mu = new_mu
         for name, param in model_grown.named_parameters():
             if param.requires_grad and name not in self.shadow:
-                self.shadow[name] = param.cone()
+                self.shadow[name] = param.clone()
 
 
 class Trainer:
