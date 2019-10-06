@@ -206,14 +206,15 @@ class Trainer:
         self.generator_ema.grow()
         self.dataloader.grow()
 
+        self.generator.cuda()
+        self.discriminator.cuda()
+
         decay = 0.0
         if self.weights_halflife > 0:
             decay = 0.5 ** (float(self.dataloader.batch_size) / self.weights_halflife)
 
         self.ema.grow(self.generator, decay)
 
-        self.generator.cuda()
-        self.discriminator.cuda()
         self.tb.renew('{}x{}'.format(self.dataloader.img_size, self.dataloader.img_size))
 
         self.lr = self.lrs.get(str(self.dataloader.img_size), 0.001)
