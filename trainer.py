@@ -38,6 +38,12 @@ class EMA():
             if param.requires_grad:
                 param.data = self.shadow[name]
 
+    def grow(self, model_grown, new_mu):
+        self.mu = new_mu
+        for name, param in model_grown.named_parameters():
+            if param.requires_grad and name not in self.shadow:
+                self.shadow[name] = param.cone()
+
 
 class Trainer:
     def __init__(self, dataset_dir, generator_channels, discriminator_channels, nz, style_depth, lrs, betas, eps,
@@ -59,7 +65,9 @@ class Trainer:
 
         self.opt_level = opt_level
 
-    def generator_trainloop(self, batch_size, alpha, ema):
+        self.ema = None
+
+    def generator_trainloop(self, batch_size, alpha):
         requires_grad(self.generator, True)
         requires_grad(self.discriminator, False)
 
@@ -80,7 +88,7 @@ class Trainer:
         self.optimizer_g.step()
         for name, param in self.generator.named_parameters():
             if param.requires_grad:
-                ema(name, param.data)
+                self.ema(name, param.data)
 
         return loss.item()
 
@@ -134,33 +142,34 @@ class Trainer:
         else:
             self.grow()
 
+        self.ema = self.init_ema(self.dataloader.batch_size)
         while True:
             print('train {}X{} images...'.format(self.dataloader.img_size, self.dataloader.img_size))
-            ema = self.init_ema(self.dataloader.batch_size)
+
             for iter, ((data, _), n_trained_samples) in enumerate(tqdm(self.dataloader), 1):
                 real = data.cuda()
                 alpha = min(1, n_trained_samples / self.phase_iter) if self.dataloader.img_size > 8 else 1
 
                 loss_d, (real_score, fake_score) = self.discriminator_trainloop(real, alpha)
-                loss_g = self.generator_trainloop(real.size(0), alpha, ema)
+                loss_g = self.generator_trainloop(real.size(0), alpha)
 
                 if global_iter % log_iter == 0:
-                    self.save_ema(ema)
+                    self.save_ema()
                     self.log(loss_d, loss_g, real_score, fake_score, test_z, alpha)
 
                 # save 3 times during training
                 if iter % (len(self.dataloader) // 4 + 1) == 0:
-                    self.save_ema(ema)
+                    self.save_ema()
                     self.save_checkpoint(n_trained_samples)
 
                 global_iter += 1
                 self.tb.iter(data.size(0))
-            self.save_ema(ema)
+            self.save_ema()
             self.save_checkpoint()
             self.grow()
 
-    def save_ema(self, ema):
-        ema.set_weights(self.generator_ema)
+    def save_ema(self):
+        self.ema.set_weights(self.generator_ema)
 
     def init_ema(self, minibatch_size):
         decay = 0.0
@@ -199,6 +208,13 @@ class Trainer:
         self.generator.grow()
         self.generator_ema.grow()
         self.dataloader.grow()
+
+        decay = 0.0
+        if self.weights_halflife > 0:
+            decay = 0.5 ** (float(self.dataloader.batch_size) / self.weights_halflife)
+
+        self.ema.grow(self.generator, decay)
+
         self.generator.cuda()
         self.discriminator.cuda()
         self.tb.renew('{}x{}'.format(self.dataloader.img_size, self.dataloader.img_size))
