@@ -20,8 +20,8 @@ def requires_grad(model, flag=True):
 
 # https://discuss.pytorch.org/t/how-to-apply-exponential-moving-average-decay-for-variables/10856/4
 class EMA():
-    def __init__(self, mu):
-        self.mu = mu
+    def __init__(self):
+        self.mu = None
         self.shadow = {}
 
     def register(self, name, val):
@@ -137,7 +137,7 @@ class Trainer:
 
         test_z = torch.randn(4, self.nz).cuda()
 
-        self.ema = self.init_ema(self.dataloader.batch_size)
+        self.ema = self.init_ema()
         if checkpoint:
             self.load_checkpoint(checkpoint)
         else:
@@ -171,11 +171,8 @@ class Trainer:
     def save_ema(self):
         self.ema.set_weights(self.generator_ema)
 
-    def init_ema(self, minibatch_size):
-        decay = 0.0
-        if self.weights_halflife > 0:
-            decay = 0.5 ** (float(minibatch_size) / self.weights_halflife)
-        ema = EMA(decay)
+    def init_ema(self):
+        ema = EMA()
         for name, param in self.generator.named_parameters():
             if param.requires_grad:
                 ema.register(name, param.data)
