@@ -67,6 +67,8 @@ class Trainer:
 
         self.ema = None
 
+        torch.backends.cuda.benchmark = True
+
     def generator_trainloop(self, batch_size, alpha):
         requires_grad(self.generator, True)
         requires_grad(self.discriminator, False)
