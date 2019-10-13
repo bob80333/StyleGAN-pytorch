@@ -40,6 +40,11 @@ class EMA():
 
     def grow(self, model_grown, new_mu):
         self.mu = new_mu
+        # since all old blocks are now one layer deeper, modify names to reflect that
+        # this way model.conv1 etc are now free for the newest layer to use
+        for name in self.shadow:
+            if 'model' in name:
+                self.shadow[name[:5] + '.prev' + name[5:]] = self.shadow.pop(name)
         for name, param in model_grown.named_parameters():
             if param.requires_grad and name not in self.shadow:
                 self.shadow[name] = param.clone()
